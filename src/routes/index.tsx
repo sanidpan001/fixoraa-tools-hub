@@ -23,6 +23,7 @@ function HomePage() {
   const filteredCategories = useMemo(() => categories.filter((category) => !normalized || category.name.toLowerCase().includes(normalized) || category.tools.some((tool) => `${tool.name} ${tool.description} ${tool.slug}`.toLowerCase().includes(normalized))), [normalized]);
 
   useEffect(() => { const hash = window.location.hash.slice(1); if (categories.some((item) => item.id === hash)) setExpanded(hash); }, []);
+  useEffect(() => { if (normalized && filteredCategories.length === 1) setExpanded(filteredCategories[0]?.id ?? null); }, [normalized, filteredCategories]);
   const toggleCategory = (id: string) => { const next = expanded === id ? null : id; setExpanded(next); window.history.replaceState(null, "", next ? `#${next}` : window.location.pathname); };
 
   return <PageFrame>
