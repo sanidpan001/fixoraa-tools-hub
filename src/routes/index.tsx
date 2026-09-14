@@ -1,24 +1,49 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { AnimatePresence, motion } from "motion/react";
+import { Check, Compass, LockKeyhole, MousePointerClick, Search, Sparkles, Zap } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { CategoryBox } from "@/components/CategoryBox";
+import { PageFrame } from "@/components/PageFrame";
+import { SearchBar } from "@/components/SearchBar";
+import { ToolCard } from "@/components/ToolCard";
+import { allTools, categories, totalTools } from "@/data/tools";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
-  component: Index,
+  head: () => ({ meta: [{ title: "Fixoraa.tech - 100+ Free Online Tools - No Signup" }, { name: "description", content: "Free image, PDF, text, video and AI tools. No signup, no watermark and no limits—just open and use." }, { property: "og:title", content: "Fixoraa.tech - 100+ Free Online Tools" }, { property: "og:description", content: "Useful free tools for images, PDFs, text, video and AI tasks." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }], links: [{ rel: "canonical", href: "/" }] }),
+  component: HomePage,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
-  return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
-  );
+const trust = [{ icon: Check, label: "100% Free" }, { icon: LockKeyhole, label: "No Signup" }, { icon: Zap, label: "Fast & Private" }];
+
+function HomePage() {
+  const [query, setQuery] = useState("");
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const normalized = query.trim().toLowerCase();
+  const filteredTools = useMemo(() => allTools.filter((tool) => `${tool.name} ${tool.description} ${tool.slug}`.toLowerCase().includes(normalized)), [normalized]);
+  const filteredCategories = useMemo(() => categories.filter((category) => !normalized || category.name.toLowerCase().includes(normalized) || category.tools.some((tool) => `${tool.name} ${tool.description} ${tool.slug}`.toLowerCase().includes(normalized))), [normalized]);
+
+  useEffect(() => { const hash = window.location.hash.slice(1); if (categories.some((item) => item.id === hash)) setExpanded(hash); }, []);
+  const toggleCategory = (id: string) => { const next = expanded === id ? null : id; setExpanded(next); window.history.replaceState(null, "", next ? `#${next}` : window.location.pathname); };
+
+  return <PageFrame>
+    <section className="mx-auto max-w-6xl px-5 pb-20 pt-20 text-center lg:px-8 lg:pt-28"><motion.p initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .6 }} className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-xs font-semibold text-vintage-brown shadow-warm-sm"><Sparkles className="size-4 text-primary" /> Your everyday toolbox, thoughtfully made</motion.p><motion.h1 initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .7, delay: .08 }} className="mx-auto max-w-4xl font-display text-4xl font-extrabold leading-[1.08] text-foreground sm:text-6xl lg:text-7xl"><span className="text-gradient">Fix</span> your daily tasks with 100+ free tools</motion.h1><motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: .7, delay: .18 }} className="mx-auto mt-6 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">No signup. No watermark. No limits. Just open and use.</motion.p><motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .7, delay: .25 }} className="mt-9"><SearchBar value={query} onChange={setQuery} resultCount={filteredTools.length} /></motion.div><div className="mt-6 flex flex-wrap justify-center gap-3">{trust.map(({ icon: Icon, label }, index) => <motion.span key={label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .5, delay: .35 + index * .08 }} className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-xs font-semibold text-vintage-brown"><Icon className="size-3.5 text-secondary" />{label}</motion.span>)}</div></section>
+
+    <section className="mx-auto max-w-7xl px-5 py-12 lg:px-8"><div className="mb-9 flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><p className="section-kicker">Browse your way</p><h2 className="section-title">Everything has its place.</h2></div><p className="max-w-md text-sm leading-6 text-muted-foreground">Open a category to see every tool, or search by the task you need to finish.</p></div><AnimatePresence mode="popLayout"><motion.div layout className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">{filteredCategories.map((category) => <CategoryBox key={category.id} category={category} expanded={expanded === category.id} onToggle={() => toggleCategory(category.id)} visibleTools={normalized ? category.tools.filter((tool) => `${tool.name} ${tool.description}`.toLowerCase().includes(normalized)) : category.tools} />)}</motion.div></AnimatePresence>{filteredCategories.length === 0 && <div className="rounded-[24px] border border-dashed border-border bg-card p-12 text-center"><Search className="mx-auto size-8 text-primary"/><h3 className="mt-4 font-display text-xl font-bold">No tools found yet</h3><p className="mt-2 text-sm text-muted-foreground">Try a broader phrase, like “image” or “PDF”.</p></div>}</section>
+
+    <section id="all-tools" className="mx-auto max-w-7xl scroll-mt-28 px-5 py-20 lg:px-8"><div className="mb-9 flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><p className="section-kicker">Quick access</p><h2 className="section-title">All Tools A–Z</h2></div><span className="text-sm font-semibold text-vintage-brown">Showing {filteredTools.length} of {totalTools}</span></div><motion.div layout className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"><AnimatePresence mode="popLayout">{filteredTools.map((tool, index) => <motion.div layout key={tool.slug} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: .96 }} transition={{ duration: .5, delay: Math.min(index * .05, .5) }}><ToolCard tool={tool} compact /></motion.div>)}</AnimatePresence></motion.div></section>
+
+    <section className="bg-surface-soft py-20"><motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: .7 }} className="mx-auto max-w-5xl px-5 lg:px-8"><p className="section-kicker">A better utility shelf</p><h2 className="section-title">Why Fixoraa.tech?</h2><div className="prose-vintage mt-8 columns-1 gap-12 md:columns-2">
+      <p>Small digital tasks have a habit of interrupting important work. An image arrives in the wrong format. A PDF is too large to send. A paragraph needs cleaning, a video needs trimming, or an idea needs a quick first draft. These jobs should take seconds, yet too many online services turn them into a maze of registrations, trial periods, watermarks, and unclear limits. Fixoraa.tech was made to offer a calmer answer: a carefully organized home for practical tools that are ready when you are.</p>
+      <p>Our mission is simple. We want useful software to feel accessible, respectful, and uncomplicated. Every tool in the directory has a clear purpose, a memorable address, and a direct path from input to result. You do not need to learn a complex workspace before completing a one-minute task. Choose a category, open the tool you need, and get on with your day. That clarity is not an afterthought; it is the product.</p>
+      <h3>Free should feel genuinely free</h3><p>“Free” should not mean discovering a surprise watermark after the work is finished. It should not mean creating an account for a task you may only need once, or surrendering your inbox to a stream of promotional messages. Fixoraa.tech is built around a straightforward promise: no signup, no watermark, and no artificial friction. The directory is useful to students, independent makers, teachers, office teams, creators, families, and anyone who occasionally needs a capable utility without a subscription.</p>
+      <h3>One home, many everyday jobs</h3><p>Instead of keeping dozens of unrelated bookmarks, you can start here. Image tools help resize, compress, convert, enhance, crop, and prepare visual files. PDF tools bring together common document jobs, from merging and splitting to conversion, signing, organization, and protection. Text tools support writing, formatting, counting, encoding, and checking. Video tools make quick edits and conversions more approachable. AI tools provide thoughtful assistance for drafting, summarizing, explaining, and creating.</p>
+      <p>Each category is designed to be scanned quickly. Familiar language replaces technical jargon, and every description answers the practical question: what will this help me do? The A–Z directory makes repeat visits faster, while live search responds as you type. Every tool also has its own clean Fixoraa.tech subdomain, so a useful utility is easy to bookmark, remember, and share with a colleague.</p>
+      <h3>Privacy is part of usefulness</h3><p>A tool is not truly convenient if using it creates a new worry. We believe privacy should be understandable rather than hidden behind dense language. Wherever a task can be completed locally in your browser, that approach should be preferred. When processing is required, the tool should be clear about what happens and avoid retaining files longer than necessary. Our wider principle is restraint: collect less, ask for less, and keep the relationship between a person and a utility simple.</p>
+      <p>This matters for ordinary files as much as sensitive ones. A family photograph, a draft resume, an invoice, a classroom document, or a work presentation all deserve respectful handling. We encourage everyone to review a tool’s specific information before processing confidential material, and we continue to improve the directory with privacy as a practical design requirement.</p>
+      <h3>Built for speed, shaped with care</h3><p>Fast software is not only about loading quickly. It is also about reducing decisions. Fixoraa.tech groups related tools, uses consistent names, and keeps interfaces focused on the job at hand. The warm, vintage-inspired visual style is deliberately quiet: friendly without becoming distracting, distinctive without competing with your content. Motion is gentle and purposeful, helping show what opened, changed, or moved instead of adding noise.</p>
+      <p>The directory will continue to grow as real needs emerge. New additions are chosen for practical value rather than novelty, and existing listings can be refined as formats and workflows evolve. The goal is not to become the loudest collection on the internet. It is to become the one people trust when they say, “I just need a quick tool for this.”</p>
+      <h3>A toolbox for shared progress</h3><p>Useful tools often travel by word of mouth: a teacher sends one to a student, a designer shares one with a client, or a teammate drops a link into a project chat. The simple subdomain pattern makes that exchange natural. Every shared link leads directly to the relevant job rather than a generic portal. That saves time for both the sender and the person receiving it.</p>
+      <p>Fixoraa.tech is an ongoing project with a human point of view. We value clear feedback, responsible suggestions, and honest reports when something does not work as expected. If a daily task still feels harder than it should, tell us. The best directory is shaped by the small frustrations people actually encounter. Together, those observations can turn a collection of micro tools into something larger: a dependable public shelf of simple solutions, available whenever work needs a little fixing.</p>
+    </div><div className="mt-10 flex flex-wrap gap-4 border-t border-border pt-8 text-sm font-semibold text-vintage-brown"><span className="inline-flex items-center gap-2"><Compass className="size-4 text-secondary"/>Clear by design</span><span className="inline-flex items-center gap-2"><LockKeyhole className="size-4 text-secondary"/>Privacy-minded</span><span className="inline-flex items-center gap-2"><MousePointerClick className="size-4 text-secondary"/>One click away</span></div></motion.div></section>
+  </PageFrame>;
 }
