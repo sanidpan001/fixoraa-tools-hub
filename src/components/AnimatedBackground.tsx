@@ -9,6 +9,6 @@ export function AnimatedBackground() {
     "bottom-32 left-[35%] size-64 bg-vintage-gold/15",
   ];
   return <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-    {blobs.map((className, index) => <motion.div key={className} className={`absolute rounded-full blur-[80px] ${className}`} animate={reduced ? undefined : { x: [0, 24, -12, 0], y: [0, -28, 16, 0] }} transition={{ duration: 15 + index * 3, repeat: Infinity, ease: "easeInOut" }} />)}
+    {blobs.map((className, index) => <motion.div key={className} className={`absolute rounded-full blur-[80px] ${className}`} animate={reduced ? {} : { x: [0, 24, -12, 0], y: [0, -28, 16, 0] }} transition={{ duration: 15 + index * 3, repeat: Infinity, ease: "easeInOut" }} />)}
   </div>;
 }
